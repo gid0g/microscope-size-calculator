@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Microscope Measurement Calculator</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+      }
+      .tab-content {
+        padding: 1rem;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        border-radius: 0 0 0.25rem 0.25rem;
+      }
+      .result-box {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.25rem;
+        margin-top: 1rem;
+      }
+      .table-responsive {
+        margin-top: 1rem;
+      }
+    </style>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="text-center mb-4">Microscope Measurement Calculator</h1>
+
+      <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link active"
+            id="calculator-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#calculator"
+            type="button"
+            role="tab"
+            aria-controls="calculator"
+            aria-selected="true"
+          >
+            Calculator
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="records-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#records"
+            type="button"
+            role="tab"
+            aria-controls="records"
+            aria-selected="false"
+          >
+            Records
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="myTabContent">
+        <!-- Calculator Tab -->
+        <div
+          class="tab-pane fade show active"
+          id="calculator"
+          role="tabpanel"
+          aria-labelledby="calculator-tab"
+        >
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title">Calculate Specimen Size</h5>
+              <p class="card-subtitle text-muted">
+                Enter the microscope size and magnification to calculate the
+                real-life size of your specimen.
+              </p>
+            </div>
+            <div class="card-body">
+              <div
+                id="error-alert"
+                class="alert alert-danger d-none"
+                role="alert"
+              ></div>
+
+              <form id="calculator-form">
+                <div class="mb-3">
+                  <label for="username" class="form-label">Username</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="username"
+                    placeholder="Enter your username"
+                    required
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label for="microscope-size" class="form-label"
+                    >Microscope Size (μm)</label
+                  >
+                  <input
+                    type="number"
+                    step="any"
+                    class="form-control"
+                    id="microscope-size"
+                    placeholder="Enter the measured size under microscope"
+                    required
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label for="magnification" class="form-label"
+                    >Magnification</label
+                  >
+                  <input
+                    type="number"
+                    step="any"
+                    class="form-control"
+                    id="magnification"
+                    placeholder="Enter the magnification level"
+                    required
+                  />
+                </div>
+
+                <div class="result-box d-none" id="result-container">
+                  <h5>Result:</h5>
+                  <p>
+                    Real-life Size:
+                    <span id="real-size" class="fw-bold"></span> μm
+                  </p>
+                </div>
+
+                <div class="mt-4">
+                  <button
+                    type="button"
+                    id="calculate-btn"
+                    class="btn btn-primary"
+                  >
+                    Calculate
+                  </button>
+                  <button
+                    type="button"
+                    id="save-btn"
+                    class="btn btn-outline-success ms-2"
+                    disabled
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="reset"
+                    id="clear-btn"
+                    class="btn btn-outline-secondary ms-2"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Records Tab -->
+        <div
+          class="tab-pane fade"
+          id="records"
+          role="tabpanel"
+          aria-labelledby="records-tab"
+        >
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title">Saved Measurements</h5>
+              <p class="card-subtitle text-muted">
+                View all previously saved measurements.
+              </p>
+            </div>
+            <div class="card-body">
+              <button id="refresh-btn" class="btn btn-outline-primary mb-3">
+                Refresh Data
+              </button>
+
+              <div id="records-loading" class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+
+              <div id="no-records" class="text-center py-4 d-none">
+                <p>No measurements found.</p>
+              </div>
+
+              <div class="table-responsive d-none" id="records-table-container">
+                <table class="table table-striped table-hover">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Username</th>
+                      <th>Microscope Size (μm)</th>
+                      <th>Magnification</th>
+                      <th>Real Size (μm)</th>
+                      <th>Timestamp</th>
+                    </tr>
+                  </thead>
+                  <tbody id="records-table-body">
+                    <!-- Records will be inserted here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- In the <head> section -->
+
+    <!-- At the end of the <body> section, before closing </body> -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Elements
+        const calculatorForm = document.getElementById("calculator-form");
+        const usernameInput = document.getElementById("username");
+        const microscopeSizeInput = document.getElementById("microscope-size");
+        const magnificationInput = document.getElementById("magnification");
+        const calculateBtn = document.getElementById("calculate-btn");
+        const saveBtn = document.getElementById("save-btn");
+        const clearBtn = document.getElementById("clear-btn");
+        const resultContainer = document.getElementById("result-container");
+        const realSizeSpan = document.getElementById("real-size");
+        const errorAlert = document.getElementById("error-alert");
+        const refreshBtn = document.getElementById("refresh-btn");
+        const recordsLoading = document.getElementById("records-loading");
+        const noRecords = document.getElementById("no-records");
+        const recordsTableContainer = document.getElementById(
+          "records-table-container"
+        );
+        const recordsTableBody = document.getElementById("records-table-body");
+        const recordsTab = document.getElementById("records-tab");
+
+        // Current calculation result
+        let currentResult = null;
+
+        // Calculate button click
+        calculateBtn.addEventListener("click", async function () {
+          errorAlert.classList.add("d-none");
+
+          // Form validation
+          if (!microscopeSizeInput.value || !magnificationInput.value) {
+            showError("Please enter both microscope size and magnification");
+            return;
+          }
+
+          // Prepare form data
+          const formData = new FormData();
+          formData.append("microscope_size", microscopeSizeInput.value);
+          formData.append("magnification", magnificationInput.value);
+
+          try {
+            // Send calculation request
+            const response = await fetch("/calculate", {
+              method: "POST",
+              body: formData,
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              showError(data.error || "Calculation failed");
+              return;
+            }
+
+            // Display result
+            currentResult = data;
+            realSizeSpan.textContent = data.real_size.toFixed(6);
+            resultContainer.classList.remove("d-none");
+            saveBtn.disabled = false;
+          } catch (error) {
+            showError("An error occurred during calculation");
+            console.error(error);
+          }
+        });
+
+        // Save button click
+        saveBtn.addEventListener("click", async function () {
+          if (!currentResult) return;
+
+          if (!usernameInput.value.trim()) {
+            showError("Please enter a username");
+            return;
+          }
+
+          try {
+            // Prepare data for saving
+            const saveData = {
+              username: usernameInput.value.trim(),
+              microscope_size: currentResult.microscope_size,
+              magnification: currentResult.magnification,
+              real_size: currentResult.real_size,
+            };
+
+            // Send save request
+            const response = await fetch("/save", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(saveData),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              showError(data.error || "Failed to save measurement");
+              return;
+            }
+
+            // Show success message
+            alert("Measurement saved successfully!");
+
+            // Clear form
+            calculatorForm.reset();
+            resultContainer.classList.add("d-none");
+            saveBtn.disabled = true;
+            currentResult = null;
+          } catch (error) {
+            showError("An error occurred while saving");
+            console.error(error);
+          }
+        });
+
+        // Clear button click
+        clearBtn.addEventListener("click", function () {
+          resultContainer.classList.add("d-none");
+          saveBtn.disabled = true;
+          errorAlert.classList.add("d-none");
+          currentResult = null;
+        });
+
+        // Load measurements
+        async function loadMeasurements() {
+          try {
+            recordsLoading.classList.remove("d-none");
+            noRecords.classList.add("d-none");
+            recordsTableContainer.classList.add("d-none");
+
+            const response = await fetch("/measurements");
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.error || "Failed to load measurements");
+            }
+
+            // Update UI based on data
+            if (data.length === 0) {
+              noRecords.classList.remove("d-none");
+            } else {
+              recordsTableBody.innerHTML = "";
+
+              data.forEach((record) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                                <td>${record.id}</td>
+                                <td>${record.username}</td>
+                                <td>${record.microscope_size.toFixed(4)}</td>
+                                <td>${record.magnification.toFixed(2)}</td>
+                                <td>${record.real_size.toFixed(6)}</td>
+                                <td>${record.timestamp}</td>
+                            `;
+                recordsTableBody.appendChild(row);
+              });
+
+              recordsTableContainer.classList.remove("d-none");
+            }
+          } catch (error) {
+            console.error("Error loading measurements:", error);
+            alert("Failed to load measurements: " + error.message);
+          } finally {
+            recordsLoading.classList.add("d-none");
+          }
+        }
+
+        // Refresh button click
+        refreshBtn.addEventListener("click", loadMeasurements);
+
+        // Records tab click
+        recordsTab.addEventListener("click", loadMeasurements);
+
+        // Helper function to show error
+        function showError(message) {
+          errorAlert.textContent = message;
+          errorAlert.classList.remove("d-none");
+        }
+
+        // Initial load of measurements
+        loadMeasurements();
+      });
+    </script>
+  </body>
+</html>
